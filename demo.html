@@ -85,7 +85,7 @@
                 <div class="video_upload_box">
                     <!-- <video id="video_player" src="https://raw.githubusercontent.com/spkim8804/subtle_demo/main/demo_video.mp4" type="video/mp4"></video> -->
                     <!-- <video id="video_player" src="static/files/ko_young_7701.mp4" type="video/mp4"></video> -->
-                    <video muted id="video_player" src="files/ko_young_7701.mp4" type="video/mp4"></video>
+                    <video id="video_player" src="files/ko_young_7701.mp4" type="video/mp4"></video>
                 </div>
                 <div id="umap_plot" style="display: none">
                     <svg id="tracePlot" class="plot_style" style="z-index: 2"></svg>
@@ -162,11 +162,14 @@
             // Demo file upload
             $.ajax({
                 type: "GET",
+                // url: "https://github.com/spkim8804/SUTBLE_SA_ver/blob/master/files/ko_young_7701.csv",
                 url: "files/ko_young_7701.csv",
                 dataType: "text",
+                sync: true,
                 success: function(file) {
                     console.log("csv file uploaded!")
                     read_merged_files(file, "Demo annotation", 0);
+                    streaming();
                 },
                 error: function(xhr, status, error) {
                     console.error("An error occurred: " + error);
@@ -210,6 +213,7 @@
             var current_file_name = [];
             var current_annot_num = 0;
             var annotation_select = document.getElementById("annotation_select");
+            var total_csv_file = 1;
             
             // D3.js variables
             var model_x_max = [];
@@ -321,14 +325,14 @@
             });
             
             function video_load(file){
-                if(file['type']=='video/mp4'){                 
+                if(file['type']=='video/mp4'){
                     const videourl = URL.createObjectURL(file);
                     video_names[video_cnt] = videourl;
                     video.setAttribute("src", videourl);
                     // video_file_name.innerHTML = file.name;
                     video.load();
                     // control.Time = 0;
-                    // videoinfo(file); // get fps and total frames
+                    videoinfo(file); // get fps and total frames
                 } else{
                     alert("Please upload mp4 file!");
                 }
@@ -352,7 +356,7 @@
             // Choose directory (local)
             const choose_directory = document.getElementById('choose_directory');
             choose_directory.addEventListener('change', async function(e){
-                console.log(e.target.files.length);
+                
                 if(e.target.files.length > 0){
                     _loadPage();
                     control.Playstatus = false;
@@ -377,11 +381,11 @@
                         }
                     }
                     read_merged_files(temp, name, 1);
-                    console.log(video_fps);
+                    // console.log(video_fps);
                     // _showPage();
                 }
             });
-            annotation_select.addEventListener('change', async function(e){
+            annotation_select.addEventListener('change', function(e){
                 current_annot_num = parseInt(e.target.value);
                 set_annot_categories(annot_status2[current_file_num][current_annot_num].length);
             });
@@ -497,6 +501,7 @@
                             if(name[i].split(".")[name[i].split(".").length-1]=="csv") cnt_temp += 1;
                         }
                     }
+                    total_csv_file = cnt_temp;
                     if(cnt_temp == 0){
                         alert("There is no csv file in this directory!");
                     } else{
@@ -534,7 +539,6 @@
                             load_percentage.innerHTML = "Loading<br>" + String(parseInt(i/e.length*100)) + " %";
                             // Loading complete
                             if(i==e.length || filter == 0){
-                                console.log("haha");
                                 control.Playstatus = true;
                                 load_percentage.style = "position: absolute; left: "+window.innerWidth*46/100+"px; top: "+window.innerHeight*45/100+"px; display: none";
                                 _showPage();
@@ -988,7 +992,8 @@
                 annot_status[parseInt(current_file_num) + 1] = annot_status[current_file_num];
 
                 current_file_num = parseInt(current_file_num) + 1;
-                console.log(current_file_num);
+                if(current_file_num >= total_csv_file) current_file_num -= 1;
+                // console.log(current_file_num);
                 const new_filenames = document.getElementById('filenames');
                 new_filenames.value = current_file_num;
                 for (var i = 0; i < video_cnt; i++){
@@ -1006,13 +1011,14 @@
                 while(true){
                     var temp = false;
                     if(parseInt(control.Time)<0) parseInt(control.Time) = 0;
+                    if(control.Time>=skeleton_total_frame[current_file_num]) end_of_video();
                     for(var i = 0; i < annot_status2[current_file_num][current_annot_num].length; i+=1){
                         if(annot_status[current_file_num][current_annot_num][annot_status2[current_file_num][current_annot_num][i]]==true && 
                             merged_file[current_file_num][parseInt(control.Time)][30+current_annot_num]==annot_status2[current_file_num][current_annot_num][i]
                             // && parseFloat(merged_file[current_file_num][parseInt(control.Time)][36])<0 //LF-RF, negative 
                             // && parseFloat(merged_file[current_file_num][parseInt(control.Time)][36])>0 // LF-RF, positive
                             // && parseFloat(merged_file[current_file_num][parseInt(control.Time)][37])>0 // LH-RH, positive
-                            && parseFloat(merged_file[current_file_num][parseInt(control.Time)][37])<0 // LH-RH, negative
+                            // && parseFloat(merged_file[current_file_num][parseInt(control.Time)][37])<0 // LH-RH, negative
                             ){
                             temp = true;
                             break;
@@ -1023,7 +1029,7 @@
                     control.Time += parseInt(control.Frameskip);
                     if(control.Time>=skeleton_total_frame[current_file_num]) end_of_video();
                 }
-                console.log(parseFloat(merged_file[current_file_num][parseInt(control.Time)][36]));
+                // console.log(parseFloat(merged_file[current_file_num][parseInt(control.Time)][36]));
                 if (control.DarkSkin == false){
                     c1="#000000"; // head
                     c2="#000000"; // neck
@@ -1098,7 +1104,7 @@
                 trace_color_code.push("rgb("+i*20+", "+i*20+", "+i*20+")");
             }
 
-            streaming();
+            // streaming();
 
             function streaming(){
                 if(control.Playstatus == false) control.Time -= parseInt(control.Frameskip);
