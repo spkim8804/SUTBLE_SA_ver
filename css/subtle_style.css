@@ -1,0 +1,70 @@
+.bd-placeholder-img {
+    font-size: 1.125rem;
+    text-anchor: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+@media (min-width: 768px) {.bd-placeholder-img-lg {font-size: 3.5rem;}}
+#canvas { float: left; max-width: 100%; height: auto;}
+#video_input{ visibility: hidden; height: 0;}
+#skeleton_input{ visibility: hidden;}
+#annotation_input{ visibility: hidden;}
+#annotation_plot{ width: 40%; height: 50%; clear:both;}
+#video_player{ float: left; width: 100%; height: auto;}
+#btn_group button{ border: 1px solid skyblue; background-color: rgba(0,0,0,0); color: skyblue; padding: 2px; } 
+
+/* Dropdown menu */
+.features_menu>.features_menu_sub{
+    display:none;
+    height:110px;
+    list-style:none;
+    overflow:hide;
+    position: absolute;
+    z-index: 99;
+}
+
+.features_menu>.features_menu_sub li,
+.features_menu>.features_menu_sub li>a{ color:white;}
+
+.features_menu>.features_menu_sub.up{
+    height:0px;
+    animation-name:slide_up;
+    animation-duration:1s;  
+}
+
+.features_menu>.features_menu_sub.down{
+    height:110px;
+    animation-name:slide_down;
+    animation-duration:1s;
+}
+@keyframes slide_up{ 0%{ height:110px;} 100%{ height:0px;}}
+@keyframes slide_down{ 0%{ height:0px;} 100%{ height:110px;}}
+
+/* Analysis button hover */
+.analysistext {
+    position: relative;
+    border-bottom: 1px dotted black;
+}
+  
+.analysistext:before {
+    content: attr(analysis-hover);
+    visibility: hidden;
+    opacity: 0;
+    width: 140px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 5px;
+    padding: 5px 0;
+    /* transition: opacity 1s ease-in-out; */
+    position: absolute;
+    z-index: 1;
+    /* left: 0; */
+    top: 10%;
+}
+
+.analysistext:hover:before {
+    opacity: 1;
+    visibility: visible;
+}

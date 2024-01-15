@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html>
+    <head>        
+        <meta charset="utf-8">
+        <title>SUBTLE behavior framework</title>
+        
+        <!-- CSS -->
+        <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/cover/">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+        <link rel="stylesheet" href="static/css/cover.css">
+        <link rel="stylesheet" href="static/css/subtle_style.css">
+
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://unpkg.com/three@0.143.0/build/three.module.js"
+                }
+            }
+        </script>
+    </head>
+    <body class="h-100 text-white bg-dark">
+        <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+            <!-- Top panel -->
+            <header class="mb-auto">
+                <div>
+                    <h3 class="float-md-start mb-0"> <a style="text-decoration: none;" href="/subtle">SUBTLE behavior framework</a></h3>          
+                    <nav class="nav nav-masthead justify-content-center">
+                        <a class="nav-link active" aria-current="page" href="/subtle">Home</a>
+                        <div class="nav-link active features_menu">
+                            <span>Features</span>
+                            <ul class="nav-link active bg-dark features_menu_sub">
+                                <li><a class="nav-link" href="/subtle/demo">Demo</a></li>
+                                <li><a class="nav-link" href="/subtle/annotator">Annotator</a></li>
+                                <li><a class="nav-link inactive" href="">Analysis</a></li>
+                            </ul>
+                        </div>
+                        <a class="nav-link active" href="/subtle/contact">Contact</a>
+                    </nav>
+                </div>
+            </header>
+        </div>
+        
+        <section id="video_section" class="bg-dark">
+            <style>
+                #video_section .video_upload_box{
+                    width: 45%;
+                    float: left;
+                    border:1px solid gray;
+                    box-shadow: 2px 3px 9px hsl(0, 0%, 47%);
+                    padding:10px;
+                }
+            </style>
+            <div class="video_upload_box">
+                <!-- <button onclick="open_video_file()" style="float: left;">Open video file</button> -->
+                <button id="open_video_file_btn" style="float: left;">Open video file</button>
+                <div id="video_file_name" style="font-size: 20px; float: left;">Demo video file</div>
+                <!-- <video id="video_player" src="{{url_for('static', filename='files/demo_video_6115.mp4')}}" type="video/mp4"></video> -->
+                <video id="video_player" src="https://raw.githubusercontent.com/spkim8804/subtle_demo/main/demo_video.mp4" type="video/mp4"></video>
+                <div id="annotation_name" style="position: absolute; top: 110px; left: 20px; background-color: black; font-size: 20px;">idle</div>
+            </div>
+        </section>
+        <section id="skeleton_section" class="bg-dark">
+            <style>
+                #skeleton_section .skeleton_upload_box{
+                    width: 45%;
+                    float: left;
+                    border:1px solid gray;
+                    box-shadow: 2px 3px 9px hsl(0, 0%, 47%);
+                    padding:10px;
+                }
+            </style>
+            <div class="skeleton_upload_box">
+                <!-- <button onclick="open_skeleton_file()" style="float: left;">Open skeleton file</button> -->
+                <button id="open_skeleton_file_btn" style="float: left;">Open skeleton file</button>
+                <div id="skeleton_file_name"style="font-size: 20px; float: left;">Demo skeleton file</div>
+                <div id="canvas"></div>
+            </div>
+        </section>
+        <section id="annotation_section" class="bg-dark">
+            <style>
+                #annotation_section .annotation_upload_box{
+                    width: 75%;
+                    float: left;
+                    border:1px solid gray;
+                    box-shadow: 2px 3px 9px hsl(0, 0%, 47%);
+                    padding:10px;
+                }
+            </style>
+            <div class="annotation_upload_box">
+                <!-- <button onclick="open_annotation_file()" style="float: left;">Open annotation file</button> -->
+                <button id="open_annotation_file_btn" style="float: left;">Open annotation file</button>
+                <div id="annotation_file_name" style="font-size: 20px; float: left;">Demo annotation file</div>
+                <!-- <button onclick="click_annot(true)" style="float: left;">All</button> -->
+                <button id="click_all_btn" value="1" style="float: left;">All</button>
+                <!-- <button onclick="click_annot(false)" style="float: left;">None</button> -->
+                <button id="click_none_btn" value="0" style="float: left;">None</button>
+                <div id='annotation_plot'></div>
+                <div class="Annot_select" id="Annot_select"></div>
+                
+            </div>
+        </section>
+
+        <div id='annotation_plot2'></div>
+        <!-- input collection-->
+        <input id="video_input" type="file" accept="video/mp4">
+        <input id="skeleton_input" type="file" accept="csv">
+        <input id="annotation_input" type="file" accept="csv">
+ 
+        <!-- js cdn collection-->       
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/2.0.0-alpha.2/cropper.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+        <script async src="https://unpkg.com/mediainfo.js/dist/mediainfo.min.js"></script>
+        
+        <script type="module">
+            import * as THREE from 'three';
+            import { OrbitControls } from 'https://unpkg.com/three@0.143.0/examples/jsm/controls/OrbitControls.js';
+            
+            function create2DArray(rows, columns) {
+                var arr = new Array(rows);
+                for (var i = 0; i < rows; i++) {
+                    arr[i] = new Array(columns);
+                }
+                return arr;
+            }
+            // onclick function
+            document.getElementById("open_video_file_btn").addEventListener("click", function(){ open_video_file(); });
+            document.getElementById("open_annotation_file_btn").addEventListener("click", function(){ open_annotation_file(); });
+            document.getElementById("open_skeleton_file_btn").addEventListener("click", function(){ open_skeleton_file(); });
+            document.getElementById("click_all_btn").addEventListener("click", function(e){ click_annot(e.target.value); });
+            document.getElementById("click_none_btn").addEventListener("click", function(e){ click_annot(e.target.value); });
+            document.querySelector('.Annot_select').addEventListener("click", function(e){ chkbox(e.target);})
+            
+            // Variables initialization
+            var CANVAS_WIDTH = 600;
+            var CANVAS_HEIGHT = 600;
+
+            var array = create2DArray(50000, 27);
+            var annot = create2DArray(100, 10000);
+            var annot_cnt = 1;            
+            var annot_status = {test: true}
+            var annot_status2 = ['test'];
+            var annot_width = 6;
+            
+            var plotdata = create2DArray(5, 130000);
+            var model_url;
+            var model_x_max=-999999;
+            var model_x_min=999999;
+            var model_y_max=-999999;
+            var model_y_min=999999;
+    
+            var array2 = new Array();
+            var annot2 = new Array();
+            var plotdata2 = new Array();
+            var skeleton_flag=false;
+            var annotation_flag=false;
+            var plot_flag = false;
+            var plotly_flag = false;
+            var skeleton_total_frame=0;
+            var play_status = 0;
+            
+            // 3D Skeleton parameter set
+            var control = new function(){
+
+                this.FrameSpeed = 20;
+                this.Frameinterval = 1;
+
+                this.Time = 0;
+
+                this.TimeBin = 1;
+
+                this.AutoRotation = false;
+                this.TimeDimension = false;
+
+                this.Object = 0;
+
+                this.Head = true;
+                this.Neck = true;
+                this.Spine = true;
+                this.Tail = true;
+                this.Hindlimb = true;
+                this.Forelimb = true;
+
+                this.Vision =false;
+
+                this.DarkSkin = false;
+                this.Playstatus = true;
+            }
+
+            // Text labels
+            // Annotation label
+            const annotation_name = document.getElementById('annotation_name');
+            const video_file_name = document.getElementById('video_file_name');
+            const skeleton_file_name = document.getElementById('skeleton_file_name');
+            
+            // Video file input
+            var video_section = document.querySelector('#video_section');
+            var video_upload_box = video_section.querySelector('.video_upload_box');
+            const video = document.getElementById('video_player');
+            const dnd_video = document.getElementById('video_input');
+            dnd_video.addEventListener("change", function(){ video_load(dnd_video.files[0]); });
+            function open_video_file(){ dnd_video.click();} // Open video file button
+            //'#343a40'
+            video_upload_box.addEventListener('dragenter', function(e) { this.style.backgroundColor = 'white'; });
+            video_upload_box.addEventListener('dragleave', function(e) { this.style.backgroundColor = '#232222'; });
+            video_upload_box.addEventListener('dragover', function(e) { e.preventDefault(); this.style.backgroundColor = 'white';});
+            video_upload_box.addEventListener('drop', function(e) {
+                e.preventDefault();
+                video_load(e.dataTransfer.files[0]);
+                this.style.backgroundColor = '#232222';
+            });
+            
+            function video_load(file){
+                if(file['type']=='video/mp4'){ // Check video file or not                    
+                    const videourl = URL.createObjectURL(file);
+                    video.setAttribute("src", videourl);
+                    video_file_name.innerHTML = file.name;
+                    video.load();
+                    control.Time = 0; // Restart the video
+                } else{
+                    alert("Please upload mp4 file!");
+                }
+            }
+           
+            // Skeleton file input
+            var skeleton_section = document.querySelector('#skeleton_section');
+            var skeleton_upload_box = skeleton_section.querySelector('.skeleton_upload_box');
+            const dnd_skeleton = document.getElementById('skeleton_input');
+            dnd_skeleton.addEventListener("change", function(){ skeleton_load(dnd_skeleton.files[0],false); });
+            function open_skeleton_file() { dnd_skeleton.click();} // Open skeleton file button
+
+            skeleton_upload_box.addEventListener('dragenter', function(e) { this.style.backgroundColor = 'white'; });
+            skeleton_upload_box.addEventListener('dragleave', function(e) { this.style.backgroundColor = '#232222'; });
+            skeleton_upload_box.addEventListener('dragover', function(e) { e.preventDefault(); this.style.backgroundColor = 'white';});
+            skeleton_upload_box.addEventListener('drop', function(e) {
+                e.preventDefault();
+                skeleton_load(e.dataTransfer.files[0],false);
+                this.style.backgroundColor = '#232222';
+            });
+            function skeleton_load(file, filter){
+                if(filter==false && (file['type']=='application/vnd.ms-excel' || file['type']=='text/csv')){
+                    let reader = new FileReader();
+                    reader.readAsText(file);
+                    reader.onload = function () {        
+                        var input=reader.result;
+                        var temp = input.split('\n');
+                        var temp2 = temp[0].split(',');
+                        if(temp2.length==27){ // Avatar skeleton file filter
+                            array2 = input.split(/,|\n/);
+                            control.Time = 0; // Restart the video
+                            skeleton_flag = false;
+                            skeleton_file_name.innerHTML = file.name;
+                            
+                        } else{
+                            alert("Please upload skeleton file!");
+                        }
+                    };                
+                } else if(filter==true){
+                    array2 = file.split(/,|\n/);
+                } else {
+                    alert("Please upload skeleton file!");
+                }
+            }
+
+            // Annotation file input
+            var annotation_section = document.querySelector('#annotation_section');
+            var annotation_upload_box = annotation_section.querySelector('.annotation_upload_box');
+            const dnd_annotation = document.getElementById('annotation_input');
+            dnd_annotation.addEventListener("change", function(){ annotation_load(dnd_annotation.files[0],false); });
+            function open_annotation_file() { dnd_annotation.click();} // Open skeleton file button
+
+            annotation_upload_box.addEventListener('dragenter', function(e) { this.style.backgroundColor = 'white'; });
+            annotation_upload_box.addEventListener('dragleave', function(e) { this.style.backgroundColor = '#232222'; });
+            annotation_upload_box.addEventListener('dragover', function(e) { e.preventDefault(); this.style.backgroundColor = 'white';});
+            annotation_upload_box.addEventListener('drop', function(e) {
+                e.preventDefault();                
+                annotation_load(e.dataTransfer.files[0],false);
+                this.style.backgroundColor = '#232222';
+            });
+            function annotation_load(file, filter){
+                if(filter==false && (file['type']=='application/vnd.ms-excel' || file['type']=='text/csv')){
+                    let reader = new FileReader();
+                    reader.readAsText(file);
+                    reader.onload = function () {        
+                        var input = reader.result;
+                        var temp = input.split('\n');
+                        var temp2 = temp[0].split(',');
+                        if(temp2.length==6){
+                            annot_width = temp2.length;
+                            annot2 = input.split(/,|\n/);                            
+                            control.Time = 0;
+                            annotation_flag = false;
+                            annotation_file_name.innerHTML = file.name;
+                        } else{
+                            alert("Please upload annotation file!");
+                        }
+                    }
+                } else if(filter==true){
+                    file = file.replace(/\r/g,'');
+                    annot2 = file.split(/,|\n/);
+                    annotation_flag = false;
+                }
+            }
+            
+            //Load demo annotation file
+            $.ajax({
+                type: "GET",                
+                url: "https://raw.githubusercontent.com/spkim8804/subtle_demo/main/demo_annotation.csv",
+                // url: "{{url_for('static', filename='files/ko_young_7701.csv')}}",
+                dataType: "text",
+                async : false,
+                success: function(file){ annotation_load(file,true);}
+            });
+
+            // Load model annotation
+            // $.ajax({
+            //     type: "GET",                
+            //     url: "static', filename='files/model_annotation.csv')}}",
+            //     dataType: "text",
+            //     async : false,
+            //     success: function(file){ annotation_load(file,2);}
+            // });
+
+            // Load demo skeleton file
+            $.ajax({
+                type: "GET",                
+                url: "https://raw.githubusercontent.com/spkim8804/subtle_demo/main/demo_coordinates.csv",
+                dataType: "text",
+                async : false,
+                success: function(file) { skeleton_load(file,true);}
+            });
+            
+            // Resize Three.js and plotly 
+            function onWindowResize(){
+                // Three.js resize
+                camera.updateProjectionMatrix();
+                renderer.setSize( window.innerWidth/3, window.innerWidth/3);
+                
+                // Plotly resize                        
+                // var layout = {
+                //     xaxis:{
+                //         range: [model_x_min,model_x_max],
+                //         showgrid : false,
+                //         zeroline : false,
+                //     },
+                //     yaxis:{
+                //         range: [model_y_min,model_y_max],
+                //         showgrid : false,
+                //         zeroline : false,
+                //     },
+                //     images: [{                                    
+                //         sizex: model_x_max-model_x_min,
+                //         sizey: model_y_max-model_y_min,
+                //         // source: "{{url_for('static', filename='files/custom.png')}}",
+                //         source : model_url,
+                //         // sizing: "stretch",
+                //         xanchor: "left",
+                //         yanchor: "bottom",
+                //         xref: "x",
+                //         yref: "y",
+                //         layer: "below",
+                //     }],
+                //     width: window.innerWidth/1.5,
+                //     height: window.innerWidth/1.5,
+                //     showlegend: false,
+                // }
+                // Plotly.newPlot('annotation_plot', [{
+                //     marker: {
+                //         size: 3,
+                //         color: 'purple',
+                //     },
+                //     x: [0],
+                //     y: [0],
+                //     mode: 'markers',
+                //     type: 'scatter',                                                 
+                // }], layout, /*{displayModeBar: false},*/ {showlegend: false});
+                // Plotly.addTraces('annotation_plot',{ // Dummy plot
+                //     x: [1],
+                //     y: [1],
+                //     type: 'scatter',
+                //     mode: 'markers',
+                //     marker:{'color': 'red'}
+                // });
+            }
+
+            // Main program
+            var slist=0;
+            
+            // camera
+            var camera = new THREE.PerspectiveCamera(45, CANVAS_WIDTH / CANVAS_HEIGHT, 0.1, 100)
+            camera.position.z = 20;
+            camera.position.y = 30;
+            camera.position.x = 30;
+
+            //renderer
+            var renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth/3, window.innerWidth/3);
+            document.getElementById('canvas').appendChild(renderer.domElement);
+            window.addEventListener('resize', onWindowResize, false);
+
+            //scene
+            var scene = new THREE.Scene();
+
+            camera.up.set( 0, 0, 1 );
+
+            function box(){
+
+                var points3Dx = new THREE.BufferGeometry();
+                var points3Dy = new THREE.BufferGeometry();
+
+                var x = 9;
+                var z1 = -0.7;
+                var z2 = -0.71;
+                
+                var size = 9,
+                    steps = 2;
+
+                var points = [];
+                material = new THREE.LineBasicMaterial({color:  0x303030});
+
+                for (var i = -size; i <= size; i += steps) {
+                    // //draw lines one way
+                    // geometry.vertices.push(new THREE.Vector3(-size, i,z1));
+                    // geometry.vertices.push(new THREE.Vector3(size, i,z1));
+
+                    // //draw lines the other way
+                    // geometry.vertices.push(new THREE.Vector3(i,  -size,z1));
+                    // geometry.vertices.push(new THREE.Vector3(i, size, z1));
+                    points.push(new THREE.Vector3(-size, i,z1));
+                    points.push(new THREE.Vector3(size, i,z1));
+                    points.push(new THREE.Vector3(i,  -size,z1));
+                    points.push(new THREE.Vector3(i, size, z1));
+                }
+                geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+                //THREE.LinePieces prevents connecting of vertices
+                var line = new THREE.LineSegments(geometry, material, THREE.LinePieces);
+
+                scene.add(line);
+                slist +=1;
+
+                // const geometry2 = new THREE.BufferGeometry();
+                // geometry2.vertices.push(
+                //     new THREE.Vector3(-x, -x,  z2),  // 0
+                //     new THREE.Vector3( x, -x,  z2),  // 1
+                //     new THREE.Vector3(-x,  x,  z2),  // 2
+                //     new THREE.Vector3( x,  x,  z2),  // 3
+                // );
+
+                // geometry2.faces.push(
+                //     // front
+                //     new THREE.Face3(0, 3, 2),
+                //     new THREE.Face3(0, 1, 3),
+                // );
+
+                let geometry2 = new THREE.BufferGeometry();
+                const points2 = [
+                        new THREE.Vector3(-x, -x,  z2),  // 0
+                        new THREE.Vector3( x,  x,  z2),  // 3
+                        new THREE.Vector3(-x,  x,  z2),  // 2
+
+                        new THREE.Vector3(-x, -x,  z2),  // 0
+                        new THREE.Vector3( x, -x,  z2),  // 1
+                        new THREE.Vector3( x,  x,  z2),  // 3
+                ];
+                geometry2.setFromPoints(points2);
+            
+                const material2 = new THREE.MeshBasicMaterial({color:0x101015});
+
+                const cube = new THREE.Mesh(geometry2, material2);
+
+                cube.material.opacity = 0;
+                cube.material.transparent = true;
+                scene.add(cube); 
+                slist +=1;
+            }
+
+            function octa(x1, y1, z1, x2, y2, z2,line){
+
+                if (control.TimeDimension == true){
+                    z1 = Number(z1) + parseInt(control.Time)/80;
+                    z2 = Number(z2) + parseInt(control.Time)/80;
+                }
+                if (z1<-0.7)
+                    z1=-0.7;
+                if (z2<-0.7)
+                    z2=-0.7;
+
+                var dis = Math.sqrt( Math.pow(x2-x1,2)+Math.pow(y2-y1,2)+Math.pow(z2-z1,2)  )/2;
+
+                line.position.x=0;
+                line.position.y=0;
+                line.position.z=0;
+                line.position.set( 0, 0, 0 );
+                line.rotation.set(0, 0, 0);
+
+                line.scale.set(dis,1,1);
+
+                var dx=(Number(x1) + Number(x2)) /2;
+                var dy=(Number(y1) + Number(y2)) /2;
+                var dz=(Number(z1) + Number(z2)) /2;
+                line.translateX(dx);
+                line.translateY(dy);
+                line.translateZ(dz);
+                var ay = Math.atan2(z2-z1, x2-x1); 
+                var az = Math.atan2(y2-y1, Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(z1 - z2, 2))); 
+                line.rotation.y =-ay// 10*3.14/180;
+                line.rotation.z =az// 10*3.14/180;
+            }
+
+            function vision(x1, y1, z1, x2, y2, z2,line,color){
+
+                var geometry = new THREE.ConeGeometry( 1, 4, 8 );//radius : Float, height : Float, radialSegments : Integer,
+                var material = new THREE.MeshBasicMaterial( { transparent: true, opacity: 0.05, color: 0xFFFF00} );
+                var cone = new THREE.Mesh( geometry, material );
+                cone.material.opacity = color/10;
+                scene.add( cone );
+
+                if (z1<-0.7)
+                z1=-0.7;
+                if (z2<-0.7)
+                z2=-0.7;
+
+                var dis = Math.sqrt( Math.pow(x2-x1,2)+Math.pow(y2-y1,2)+Math.pow(z2-z1,2)  )/2;
+
+                cone.position.x=0;
+                cone.position.y=0;
+                cone.position.z=0;
+                cone.position.set( 0, 0, 0 );
+                cone.rotation.set(0, 0, 0);
+
+                var dx=Number((x1-x2+dis*x1)/dis  ); 
+                var dy=Number((y1-y2+dis*y1)/dis);
+                var dz=Number((z1-z2+dis*z1)/dis);
+                    cone.translateX(dx );
+                    cone.translateY(dy );
+                    cone.translateZ( dz );
+                var ay = Math.atan2(z2-z1,x2-x1); 
+                var az = Math.atan2(y2-y1, Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(z1 - z2, 2))); 
+
+                cone.rotation.y =-ay+control.x// 10*3.14/180;s
+                cone.rotation.z =-(3.14/2)+az+control.y// 10*3.14/180;
+            }
+            var hist;
+            var timelog=-1;
+
+            // var controls = new THREE.OrbitControls (camera, renderer.domElement);
+            var controls = new OrbitControls (camera, renderer.domElement);
+            controls.rotateSpeed = 1; // 마우스로 카메라를 회전시킬 속도입니다. 기본값(Float)은 1입니다.
+            controls.zoomSpeed = 1.5; // 마우스 휠로 카메라를 줌 시키는 속도 입니다. 기본값(Float)은 1입니다.
+            controls.panSpeed = 0.5; // 패닝 속도 입니다. 기본값(Float)은 1입니다.
+            controls.minDistance = 5; // 마우스 휠로 카메라 거리 조작시 최소 값. 기본값(Float)은 0 입니다.
+            controls.maxDistance = 1000; // 마우스 휠로 카메라 거리 조작시 최대 값. 기본값(Float)은 무제한 입니다.
+            controls.keys = {
+                LEFT: "KeyA", //left arrow
+                UP: "KeyW", // up arrow
+                RIGHT: "KeyD", // right arrow
+                BOTTOM: "KeyS" // down arrow
+            }
+            
+            
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Object 생성
+            // var points3D = new THREE.Geometry();
+            // var a=0.2;
+            // var b=1;
+            // points3D.vertices.push( // here you can use 3-dimensional coordinates
+            //     new THREE.Vector3(b,0, 0),  new THREE.Vector3(0,a, a),  new THREE.Vector3(b,0, 0),  new THREE.Vector3(0,a, -a),
+            //     new THREE.Vector3(b,0, 0),  new THREE.Vector3(0,-a,-a),  new THREE.Vector3(b,0, 0),  new THREE.Vector3(0,-a,a),
+            //     new THREE.Vector3(0,a, a),  new THREE.Vector3(0,a, -a),  new THREE.Vector3(0,-a,-a),  new THREE.Vector3(0,-a,a),
+            //     new THREE.Vector3(-b,0, 0),  new THREE.Vector3(0,a, a),  new THREE.Vector3(-b,0, 0),  new THREE.Vector3(0,a,-a),
+            //     new THREE.Vector3(-b,0, 0),  new THREE.Vector3(0,-a,-a),  new THREE.Vector3(-b,0, 0),
+            // );
+            // let geometry2 = new THREE.BufferGeometry();
+            // geometry2.vertices.push(
+            //     new THREE.Vector3(b,0, 0),//0
+            //     new THREE.Vector3(0,-a,a),//1
+            //     new THREE.Vector3(0,a, a),//2
+            //     new THREE.Vector3(0,a, -a),//3
+            //     new THREE.Vector3(0,-a,-a),//4
+            //     new THREE.Vector3(-b,0, 0),//5
+            // );
+
+            // geometry2.faces.push(
+            //     // front
+            //     new THREE.Face3(0, 1, 2,new THREE.Vector3( 0, 0, 1 )),
+            //     new THREE.Face3(0, 2, 3,new THREE.Vector3( 0, 1, 0 )),
+            //     new THREE.Face3(0, 3, 4,new THREE.Vector3( 0, 0, -1 )),
+            //     new THREE.Face3(0, 4, 1,new THREE.Vector3( 0, -1, 0 )),
+            //     // back
+            //     new THREE.Face3(5, 1, 2,new THREE.Vector3( -1, 0, 1 )),
+            //     new THREE.Face3(5, 2, 3,new THREE.Vector3( -1, 1, 0 )),
+            //     new THREE.Face3(5, 3, 4,new THREE.Vector3( -1, 0, -1 )),
+            //     new THREE.Face3(5, 4, 1,new THREE.Vector3( -1, -1, 0 )),
+            // );
+
+            var points = [];
+            var a=0.2;
+            var b=1;
+            points.push(
+                new THREE.Vector3(b,0, 0),  new THREE.Vector3(0,a, a),  new THREE.Vector3(b,0, 0),  new THREE.Vector3(0,a, -a),
+                new THREE.Vector3(b,0, 0),  new THREE.Vector3(0,-a,-a),  new THREE.Vector3(b,0, 0),  new THREE.Vector3(0,-a,a),
+                new THREE.Vector3(0,a, a),  new THREE.Vector3(0,a, -a),  new THREE.Vector3(0,-a,-a),  new THREE.Vector3(0,-a,a),
+                new THREE.Vector3(-b,0, 0),  new THREE.Vector3(0,a, a),  new THREE.Vector3(-b,0, 0),  new THREE.Vector3(0,a,-a),
+                new THREE.Vector3(-b,0, 0),  new THREE.Vector3(0,-a,-a),  new THREE.Vector3(-b,0, 0),
+            );
+            let points3D = new THREE.BufferGeometry().setFromPoints(points);
+            
+            let geometry2 = new THREE.BufferGeometry();
+            var points2 = [
+                new THREE.Vector3(b,0, 0),//0
+                new THREE.Vector3(0,-a,a),//1
+                new THREE.Vector3(0,a, a),//2
+                
+                new THREE.Vector3(b,0, 0),//0
+                new THREE.Vector3(0,a, a),//2
+                new THREE.Vector3(0,a, -a),//3
+
+                new THREE.Vector3(b,0, 0),//0
+                new THREE.Vector3(0,a, -a),//3
+                new THREE.Vector3(0,-a,-a),//4
+
+                new THREE.Vector3(b,0, 0),//0
+                new THREE.Vector3(0,-a,-a),//4
+                new THREE.Vector3(0,-a,a),//1
+
+                new THREE.Vector3(-b,0, 0),//5
+                new THREE.Vector3(0,-a,a),//1
+                new THREE.Vector3(0,a, a),//2
+
+                new THREE.Vector3(-b,0, 0),//5
+                new THREE.Vector3(0,a, a),//2
+                new THREE.Vector3(0,a, -a),//3
+                
+                new THREE.Vector3(-b,0, 0),//5
+                new THREE.Vector3(0,a, -a),//3
+                new THREE.Vector3(0,-a,-a),//4
+
+                new THREE.Vector3(-b,0, 0),//5
+                new THREE.Vector3(0,-a,-a),//4
+                new THREE.Vector3(0,-a,a),//1
+            ];
+            geometry2.setFromPoints(points2);
+            
+            const material2 = new THREE.MeshBasicMaterial({color:0xffffff});
+
+            var line1 = new THREE.Mesh(geometry2, material2);
+
+            box();
+
+            var geometry = new THREE.CylinderGeometry( 0.2, 0.2, 10, 32 );
+            var material = new THREE.MeshBasicMaterial( {color: 0x999999} );
+            var cy = new THREE.Mesh( geometry, material );
+
+            cy.position.set(-3,-4.1,9.4);
+            cy.rotation.set(3.14/2, 0, 0);
+
+            var cy2 = new THREE.Mesh( geometry, material );
+
+            cy2.position.set(1.5,-4.1,9.4);
+            cy2.rotation.set(3.14/2, 0, 0);
+
+            var geometry = new THREE.CylinderGeometry( 0.2, 0.2, 1, 32 );
+            var material = new THREE.MeshBasicMaterial( {color: 0x999999} );
+            var cy1 = new THREE.Mesh( geometry, material );
+
+            cy1.position.set(-3,-3.8,4.2);
+            cy1.rotation.set(3.14/1.3, 0, 0);
+            var cy3 = new THREE.Mesh( geometry, material );
+
+            cy3.position.set(1.5,-3.8,4.2);
+            cy3.rotation.set(3.14/1.3, 0,0 );
+
+            function poseseq(array,color){
+                if (control.Head == true){
+                var line1s = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c1, transparent: true, opacity: 1}) );
+                scene.add(line1s); slist +=1;line1s.material.opacity = color;
+                octa(array[0], array[1], array[2],array[3], array[4], array[5],   line1s)}
+                if (control.Neck == true){
+                var line2s = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c2, transparent: true, opacity: 1}) );
+                scene.add(line2s); slist +=1;line2s.material.opacity = color;
+                octa(array[9], array[10], array[11],array[3], array[4], array[5],line2s)}
+                if (control.Spine == true){
+                var line3s = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c3, transparent: true, opacity: 1}) );
+                scene.add(line3s); slist +=1;line3s.material.opacity = color;
+                octa(array[9], array[10], array[11],array[6], array[7], array[8],line3s)}
+                if (control.Tail == true){
+                var line4s = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c4, transparent: true, opacity: 1}) );
+                scene.add(line4s); slist +=1;line4s.material.opacity = color;
+                octa(array[24], array[25], array[26],array[6], array[7], array[8],line4s)}
+                if (control.Hindlimb == true){
+                var line5s = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c7, transparent: true, opacity: 1}) );
+                scene.add(line5s); slist +=1;line5s.material.opacity = color;
+                octa(array[6], array[7], array[8],array[12], array[13], array[14],line5s)}
+                if (control.Hindlimb == true){
+                var line6s = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c8, transparent: true, opacity: 1}) );
+                scene.add(line6s); slist +=1;line6s.material.opacity = color;
+                octa(array[6], array[7], array[8],array[15], array[16], array[17],line6s)}
+                if (control.Forelimb == true){
+                var line7s = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c5, transparent: true, opacity: 1}) );
+                scene.add(line7s); slist +=1;line7s.material.opacity = color;
+                octa(array[9], array[10], array[11],array[18], array[19], array[20],line7s)       }
+                if (control.Forelimb == true){
+                var line8s = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c6, transparent: true, opacity: 1}) );
+                scene.add(line8s); slist +=1;line8s.material.opacity = color;
+                octa(array[9], array[10], array[11],array[21], array[22], array[23],line8s)}
+
+                if (control.Vision ==true){
+                    vision(array[0], array[1], array[2],array[3], array[4], array[5],line1s,color)
+                }
+            }
+
+            function pose(array,color){
+                //scene.remove(scene.getObjectByName(line.name));  
+                //shapes  
+                //147,      10 13 16,   19 22 25,   28 31 34,   37 40 43,  46 49 52,   55 58 61,    64 67 70,   73 76 79
+
+                var line1 = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c1, transparent: true, opacity: color}) );
+                //scene.add(line1); slist +=1;
+                var line2 = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c2, transparent: true, opacity: color}) );
+                //scene.add(line2); slist +=1;
+                var line3 = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c3, transparent: true, opacity: color}) );
+                //scene.add(line3); slist +=1;
+                var line4 = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c4, transparent: true, opacity: color}) );
+                //scene.add(line4); slist +=1;
+                var line5 = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c7, transparent: true, opacity: color}) );
+                //scene.add(line5); slist +=1;
+                var line6 = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c8, transparent: true, opacity: color}) );
+                //scene.add(line6); slist +=1;
+                var line7 = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c5, transparent: true, opacity: color}) );
+                //scene.add(line7); slist +=1;
+                var line8 = new THREE.Line( points3D, new THREE.LineBasicMaterial({color:c6, transparent: true, opacity: color}) );
+                //scene.add(line8); slist +=1;
+
+                octa(array[0], array[1], array[2],array[3], array[4], array[5], line1)
+                octa(array[9], array[10], array[11],array[3], array[4], array[5], line2)
+                octa(array[9], array[10], array[11],array[6], array[7], array[8], line3)
+                octa(array[24], array[25], array[26],array[6], array[7], array[8], line4)
+
+                octa(array[6], array[7], array[8],array[12], array[13], array[14], line5)
+                octa(array[6], array[7], array[8],array[15], array[16], array[17], line6)
+                        
+                octa(array[9], array[10], array[11],array[18], array[19], array[20], line7)      
+                octa(array[9], array[10], array[11],array[21], array[22], array[23], line8)
+
+                if (control.Vision ==true){
+                    vision(array[0], array[1], array[2],array[3], array[4], array[5],   line1,1)
+                }
+
+                if (control.Head == true)
+                hist = line1.clone();scene.add(hist); slist +=1;
+                if (control.Neck == true)
+                hist = line2.clone();scene.add(hist); slist +=1;
+                if (control.Spine == true)
+                hist = line3.clone();scene.add(hist); slist +=1;
+                if (control.Tail == true)
+                hist = line4.clone();scene.add(hist); slist +=1;
+                if (control.Hindlimb == true)
+                hist = line5.clone();scene.add(hist); slist +=1;
+                if (control.Hindlimb == true)
+                hist = line6.clone();scene.add(hist); slist +=1;
+                if (control.Forelimb == true)
+                hist = line7.clone();scene.add(hist); slist +=1;
+                if (control.Forelimb == true)
+                hist = line8.clone();scene.add(hist); slist +=1;
+            }
+
+            var colors = [
+                "rgb(255, 0, 0)",
+                "rgb(255, 69, 0)",
+                "rgb(255, 255, 0)",
+                "rgb(0, 255, 0)",
+                "rgb(0, 100, 255)",
+                "rgb(50, 0, 255)",
+                "rgb(175, 0, 255)",
+                "rgb(255, 0, 255)",
+                "rgb(100, 100, 100)",
+                "rgb(255, 255, 255)"
+            ]
+
+            var rot=0;                   
+
+            var c1="#C12026";
+            var c2="#E54D26";
+            var c3="#F78E23";
+            var c4="#FEC015";
+            var c5="#61AE44";
+            var c6="#0D8DB0";
+            var c7="#D125A0";
+            var c8="#6D256E";
+
+            if (control.DarkSkin == true){
+                var c1="#ffffff";
+                var c2="#ffffff";
+                var c3="#ffffff";
+                var c4="#ffffff";
+                var c5="#ffffff";
+                var c6="#ffffff";
+                var c7="#ffffff";
+                var c8="#ffffff";
+            }
+            ///////////////////////////////////////////렌더링                    
+
+            function check_file_update(){
+                if (skeleton_flag==false){
+                    var k=0;
+                    skeleton_total_frame = 0;
+                    outer: for (var i = 0; i <= array2.length; i=i+1){            
+                        for (var j = 0; j <= 26  ; j=j+1) {
+                            array[i][j] = 0;
+                            array[i][j] = array2[k];k++;                                     
+                            if (k>=((array2.length)-1)) break outer;
+                        }
+                        skeleton_total_frame+=1;
+                    }
+                    skeleton_flag = true;
+                    // Reset total frame
+                    gui.__controllers[7].remove();
+                    gui.add( control, 'Time' , 0, skeleton_total_frame ).listen();
+                }
+                if (annotation_flag == false){
+                    var k=0;
+                    var cnt=0; 
+                    // Previous version
+                    // outer: for (var i = 0; i <= annot2.length  ; i=i+1){
+                    //     for (var j = 0; j <= 6  ; j=j+1) {
+                    //         annot[i][j] = 0;
+                    //         annot[i][j] = annot2[k];k++;
+                    //         if (k>=((annot2.length)-1))
+                    //             break outer;                                    
+                    //     }
+                    // }
+                    annot_status = [];
+                    annot_status2 = [];
+                    
+                    outer: for (var i = 0; i <= annot2.length ; i=i+1){
+                        for (var j = 0; j < annot_width; j=j+1) {
+                            annot[j][i] = 0;
+                            const temp = annot2[k].split('\r');
+                            annot[j][i] = temp[0];
+                            k++;
+                            if (k>=((annot2.length)-1))
+                                break outer;
+                        }
+                        
+                        if(i!=0){
+                            for (var l=0; l<cnt; l+=1){
+                                if(annot[3][i]==annot_status2[l]) break;
+                            }
+                            if(l==cnt || cnt==0){
+                                annot_status[annot[3][i]] = true;
+                                annot_status2[cnt]=annot[3][i];
+                                annot_status2[cnt].replace(/\r?\n/gm,"");
+                                cnt+=1;
+                            }
+                        }
+                    }
+
+                    // Reset behavior categories
+                    if(cnt!=0){
+                        var parent = document.getElementById("Annot_select");
+                        var child = document.getElementById("New_annot");
+                        if(child != null) parent.removeChild(child);
+                        set_annot_categories(cnt);
+                    }
+                    annot_cnt = cnt;
+                    annotation_flag = true;
+                }
+
+                //Plotly
+            //     if(plot_flag == false){                            
+            //         var k=0;
+            //         outer: for (var i = 0; i <= plotdata2.length; i=i+1){            
+            //             for (var j = 0; j < 5  ; j=j+1) {
+            //                 plotdata[j][i] = 0;
+            //                 plotdata[j][i] = plotdata2[k];k++;
+            //                 if (k>=((plotdata2.length)-1)) break outer;
+            //             }
+            //             if(parseFloat(plotdata[1][i])>model_x_max) model_x_max=parseFloat(plotdata[1][i]);
+            //             if(parseFloat(plotdata[1][i])<model_x_min) model_x_min=parseFloat(plotdata[1][i]);
+            //             if(parseFloat(plotdata[2][i])>model_y_max) model_y_max=parseFloat(plotdata[2][i]);
+            //             if(parseFloat(plotdata[2][i])<model_y_min) model_y_min=parseFloat(plotdata[2][i]);
+            //         }
+            //         var layout2 ={
+            //             xaxis:{
+            //                 range: [model_x_min,model_x_max],
+            //                 showgrid : false,
+            //                 zeroline : false,
+            //                 showline : false,
+            //                 ticks: '',
+            //                 showticklabel: false,
+            //                 visible : false,
+            //             },
+            //             yaxis:{
+            //                 range: [model_y_min,model_y_max],
+            //                 showgrid : false,
+            //                 zeroline : false,
+            //                 showline : false,
+            //                 ticks: '',
+            //                 showticklabel: false,
+            //                 visible : false,
+            //             },
+            //             width: window.innerWidth/3,
+            //             height: window.innerWidth/3,
+            //             showlegend: false,
+            //         }
+            //         Plotly.newPlot('annotation_plot2', [{
+            //             // x: plotdata[1],
+            //             // y: plotdata[2],
+            //             x: [0],
+            //             y: [0],
+            //             marker: {
+            //                 size: 2,
+            //                 color: 'purple',
+            //             },
+            //             mode: 'markers',
+            //             type: 'scatter',
+            //             showticklabels: false,
+            //             width: window.innerWidth/3,
+            //             height: window.innerWidth/3,
+            //             // line: {color: '#80CAF6'}
+            //         }],layout2, {displayModeBar: false});
+                    
+            //         // for (var i=0; i < annot_cnt; i+=1){
+            //         //     var temp_cnt = 0;
+            //         //     var temp_x = new Array;
+            //         //     var temp_y = new Array;
+            //         //     for (var j=1; j < plotdata[0].length; j+=1){
+            //         //         if(plotdata[3][j]==annot_status2[i]){
+            //         //             temp_x[temp_cnt] = plotdata[1][j];
+            //         //             temp_y[temp_cnt] = plotdata[2][j];
+            //         //             temp_cnt+=1;
+            //         //         }
+            //         //     }
+            //         //     Plotly.addTraces('annotation_plot2',{
+            //         //         x: temp_x,
+            //         //         y: temp_y,
+            //         //         type: 'scatter',
+            //         //         mode: 'markers',
+            //         //         marker:{
+            //         //             size: 2,
+            //         //         }                    
+            //         //     });
+            //         // }
+                    
+            //         // Plotly.downloadImage('annotation_plot2', {format:'png', width:1000, height:1000, filename: 'test_model'})
+            //         Plotly.toImage('annotation_plot2',{
+            //             format : 'png',
+            //             height : 1000,
+            //             width : 1000,
+            //         }).then(function(url){                                
+            //             Plotly.purge('annotation_plot2');
+            //             // model_url = crop()
+            //             // console.log(model_url)
+            //             model_url = url;
+            //             console.log(model_x_min)   
+            //             console.log(model_y_min)
+            //             var layout = {
+            //                 xaxis:{
+            //                     range: [model_x_min,model_x_max],
+            //                     showgrid : false,
+            //                     zeroline : false,
+            //                 },
+            //                 yaxis:{
+            //                     range: [model_y_min,model_y_max],
+            //                     showgrid : false,
+            //                     zeroline : false,
+            //                 },
+            //                 images: [{                                    
+            //                     sizex: model_x_max-model_x_min,
+            //                     sizey: model_y_max-model_y_min,
+            //                     // source: "{{url_for('static', filename='files/custom.png')}}",
+            //                     source : model_url,
+            //                     // sizing: "stretch",
+            //                     xanchor: "left",
+            //                     yanchor: "bottom",
+            //                     xref: "x",
+            //                     yref: "y",
+            //                     layer: "below",
+            //                 }],
+            //                 width: window.innerWidth/1.5,
+            //                 height: window.innerWidth/1.5,
+            //                 showlegend: false,
+            //             }
+            //             Plotly.newPlot('annotation_plot', [{
+            //                 x: [model_x_max],
+            //                 y: [model_y_max],
+            //                 marker: {
+            //                     size: 3,
+            //                     color: 'purple',
+            //                 },
+            //                 mode: 'markers',
+            //                 type: 'scatter',                     
+            //                 // line: {color: '#80CAF6'}
+            //             }], layout, /*{displayModeBar: false},*/)
+            //             plotly_flag = true;
+            //         });
+            //         plot_flag = true;
+            //     }
+            }
+            
+            function render() {
+                check_file_update();
+                // Annotation_filter
+                while(true){
+                   // Skip non-selected behavior categories
+                    var temp = false;
+                    for(var i=0; i<annot_cnt; i+=1){
+                        if(annot_status[annot_status2[i]]==true && annot[3][parseInt(control.Time)]==annot_status2[i]){
+                            temp = true;
+                            break;
+                        }
+                    }
+                    if(temp==true) break;
+
+                    control.Time += parseInt(control.Frameinterval);
+                    if(control.Time>skeleton_total_frame) control.Time = 0;
+                }
+                
+                if (control.DarkSkin == false){
+                    c1="#C12026";
+                    c2="#E54D26";
+                    c3="#F78E23";
+                    c4="#FEC015";
+                    c5="#61AE44";
+                    c6="#0D8DB0";
+                    c7="#D125A0";
+                    c8="#6D256E";
+                    
+                    scene.background = new THREE.Color( 0xf0f0f0 );
+                }
+                if (control.DarkSkin == true){
+                    c1="#ffffff";
+                    c2="#00ffff";
+                    c3="#0000ff";
+                    c4="#ff00ff";
+                    c5="#ff0000";
+                    c6="#ff0099";
+                    c7="#00ff00";
+                    c8="#99ff99";
+                    scene.background = new THREE.Color( 0x000000 ); 
+                }                        
+                
+                renderer.renderLists.dispose();
+
+                controls.update();
+                renderer.render(scene, camera);
+                
+                camera.updateMatrixWorld();
+
+                var vector = camera.position.clone();
+
+                var dis= Math.sqrt(Math.pow(vector.x,2)+Math.pow(vector.y,2));
+
+                // Auto Rotation
+                if (control.AutoRotation ==true){
+                    rot +=1;
+                    var speed =rot* 0.0025 ;  //control.Time * 0.0025;
+                    camera.position.x = Math.cos(speed) * dis;
+                    camera.position.y = Math.sin(speed) * dis;
+                    camera.position.z = vector.z;
+                    camera.lookAt(scene.position); //0,0,0
+                }
+
+                // Print object
+                if(control.Timebin < 2){
+                    while (scene.children.length > 1) {
+                        scene.remove(scene.children[scene.children.length - 1]);
+                    }
+                    pose(array[parseInt(control.Time)],0.4);
+                } else{
+                    while (scene.children.length > 1) {
+                        scene.remove(scene.children[scene.children.length - 1]);
+                    }
+                    for (var b=1; b<=control.TimeBin ;b=b+parseInt(control.Frameinterval)){
+                        poseseq(array[parseInt(control.Time)+b],Math.pow(b/control.TimeBin,2)+0.05);
+                    }
+                }
+
+                // Synchronize video with Skeleton
+                video.currentTime = control.Time/20;
+                
+                // requestAnimationFrame( render ); 이건 무조건 60Hz로 되어서 setInterval로 변동
+
+                // Annotation visualiztaion
+                
+                // Previous version
+                // for(var i = 0; i<6; i+=1){
+                //     if(annot[parseInt(control.Time)][i]==1) break;
+                // }
+                // if(i==6){
+                //     annotation_name.innerHTML = 'idle';
+                // } else{
+                //     annotation_name.innerHTML = annot[][i];
+                // }
+                annotation_name.innerHTML = annot[3][parseInt(control.Time)];
+            }                     
+            //Controller                    
+
+            var gui = new dat.GUI();
+            gui.width = '200';
+            gui.add( control, 'FrameSpeed' , 1 , 50).listen();
+            gui.add( control, 'TimeBin' , 1, 50).listen(); 
+            gui.add( control, 'Frameinterval' , 1 , 10 ).listen();
+            gui.add( control, 'AutoRotation', true).listen();
+            gui.add( control, 'TimeDimension', true).listen();
+            gui.add( control, 'Playstatus', true).listen();
+            gui.add( control, 'DarkSkin', false).listen();    
+            gui.add( control, 'Time' , 0, skeleton_total_frame ).listen();
+            
+            // Initial check
+            check_file_update();
+
+            // Streaming
+            var interval;
+            let start_time, cur_time, del_time, decodedFrames;
+            streaming();
+            function streaming(){
+                if(control.Playstatus==true){
+                    clearInterval(interval);
+                    render();
+                    control.Time = parseInt(control.Time);
+                    control.Time += parseInt(control.Frameinterval);
+                    // if(plotly_flag==true){
+                    //     Plotly.deleteTraces('annotation_plot', 0);                        
+                    //     Plotly.addTraces('annotation_plot',{
+                    //         x: [annot[1][parseInt(control.Time)]],
+                    //         y: [annot[2][parseInt(control.Time)]],
+                    //         type: 'scatter',
+                    //         mode: 'markers',
+                    //         marker:{'color': 'red'},
+                    //     });
+                    // }
+                    if(control.Time>skeleton_total_frame) control.Time = 0;
+                    interval = setInterval(streaming, 1000/control.FrameSpeed);
+                    // console.log(video.requestVideoFrameCallback());
+                }
+            }
+            
+            // Keyboard controller
+            document.addEventListener("keydown", keyboard_down, false);
+            function keyboard_down(event) {
+                // event.preventDefault();
+                if(event['key']==' '){
+                    if(control.Playstatus==true) control.Playstatus = false;
+                    else control.Playstatus = true;
+                }
+                if(event['key']=='ArrowRight'){
+                    control.Time = parseInt(control.Time);
+                    control.Time += parseInt(control.Frameinterval);
+                    render();
+                }
+                if(event['key']=='ArrowLeft'){
+                    control.Time = parseInt(control.Time);
+                    control.Time -= parseInt(control.Frameinterval);
+                    render();
+                }
+            }
+            // Mouse controller
+            document.addEventListener("mousedown", annot_button_clicked);
+            function annot_button_clicked(){
+                render();
+                // camera.updateProjectionMatrix();
+            }
+            
+            function set_annot_categories(cnt){
+                for(var i=0;i<cnt;i++){
+                    for(var j=0;j<cnt;j++){
+                        if(parseInt(annot_status2[i])<parseInt(annot_status2[j])){
+                            var annot_temp = annot_status2[i];
+                            annot_status2[i] = annot_status2[j];
+                            annot_status2[j] = annot_temp;
+                        }
+                    }
+                }
+                var obj = document.getElementById("Annot_select");
+                var temp = "";
+                var newDiv = document.createElement("div");
+                newDiv.setAttribute("id","New_annot");
+                for(i=0;i<cnt;i++){
+                    // temp = temp + "<input type='checkbox' onclick='chkbox(this)' name='chk_box' value="+annot_status2[i]+" checked=true> "+annot_status2[i]+"  ";
+                    temp = temp + "<input type='checkbox' id='chkbox_btn' name='chk_box' value='"+annot_status2[i]+"' checked=true> "+annot_status2[i]+"  ";
+                }
+                newDiv.innerHTML = temp;
+                // obj.appendChild(newDiv);
+                obj.innerHTML = temp;
+            }
+
+            var chkbox = function(e){
+                annot_status[e.value] = e.checked;
+                for(var i=0; i<annot_cnt; i++){ if(annot_status[annot_status2[i]] == true) break;}
+                if(i == annot_cnt){ 
+                    annot_status[String(e.value)] = true;
+                    e.checked = true;
+                }
+                // const checkboxes = document.getElementsByName("chk_box");
+                // var chkbox = function(e){
+                //     checkboxes.forEach((cb) => { cb.checked = false;})
+                //     e.checked = true;
+                //     chked_annotation = e.value;
+                //     annot_button.innerHTML = e.value+"<br>(Press 'g' or click)";
+                // }
+            }
+
+            const click_annot = function(e){
+                const checkboxes = document.getElementsByName("chk_box");
+                var temp = 0;
+                checkboxes.forEach((cb) => {
+                    if(e == "1"){
+                        cb.checked = true;
+                        annot_status[cb.value] = true;
+                    } else{
+                        if(temp == 0){
+                            cb.checked = true;
+                            annot_status[cb.value] = true;
+                            temp = 1;
+                        } else{
+                            cb.checked = false;
+                            annot_status[cb.value] = false;
+                        }
+                    }
+                })
+            }
+        </script>
+    </body>
+</html>
