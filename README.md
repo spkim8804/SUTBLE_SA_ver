@@ -8,4 +8,4 @@ Installation
 3. 
 
 Demo manual
-![Demo manual](https://github.com/spkim8804/SUTBLE_SA_ver/edit/master/files/photo/demo_manual.png)
+![Demo manual](https://github.com/spkim8804/SUTBLE_SA_ver/blob/master/files/photo/demo_manual.png)
