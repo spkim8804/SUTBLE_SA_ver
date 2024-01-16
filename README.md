@@ -29,4 +29,4 @@ It is necessary to use "python server" to open project.
 
 # File format
 Currently, only avatar version can be visualized. Here is the *.csv format.
-![csv_format]("https://github.com/spkim8804/SUTBLE_SA_ver/blob/master/files/photo/csv_format.png")
+![csv_format](https://github.com/spkim8804/SUTBLE_SA_ver/blob/master/files/photo/csv_format.png)
