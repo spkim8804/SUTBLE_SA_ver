@@ -1,9 +1,9 @@
 # SUTBLE_SA_ver
-SUBTLE homepage for stand-alone version.
+This is "SUBTLE homepage" for stand-alone version.
  
-It is necessary use "python server" to open project
+It is necessary to use "python server" to open project.
 
-Installation
+# Installation
 1. Download the github files
 2. Open with "Visual Studio Code"
 3. Click the TERMINAL or "Ctrl + `" to enter the terminal
