@@ -7,5 +7,5 @@ Installation
 2. Open with "Visual Studio Code"
 3. 
 
-Demo manual
-!(https://github.com/spkim8804/SUTBLE_SA_ver/blob/master/files/photo/demo_manual.png)
+# Demo manual
+![Demo manual](https://github.com/spkim8804/SUTBLE_SA_ver/blob/master/files/photo/demo_manual.png)
