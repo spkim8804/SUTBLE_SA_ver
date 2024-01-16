@@ -15,7 +15,7 @@ It is necessary to use "python server" to open project.
 5. Open Chrome (or other browser) and type `http://localhost:8000/index.html` to run the homepage.
 
 
-# Demo manual
+# Demo features
 ![Demo manual](https://github.com/spkim8804/SUTBLE_SA_ver/blob/master/files/photo/demo_manual.png)
 1. Upload folder: You can upload the videos (must *.mp4) and *.csv files (only avatar format available). You should use the same filename for *.mp4 and *.csv
    (For example, "test.csv" and "test.mp4)
@@ -27,7 +27,7 @@ It is necessary to use "python server" to open project.
    (See file format for detail)
 
 
-# File format
+# File format (important)
 Currently, only avatar version can be visualized. Here is the *.csv format.
 
 ![csv_format](https://github.com/spkim8804/SUTBLE_SA_ver/blob/master/files/photo/csv_format.png)
