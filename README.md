@@ -4,7 +4,10 @@ This is "SUBTLE homepage" for stand-alone version.
 It is necessary to use "python server" to open project.
 
 # Installation
-1. Download the github files
+1. Download the github files or simple type following code in your desired location
+   `````
+   git clone https://github.com/spkim8804/SUTBLE_SA_ver.git
+
 2. Open with "Visual Studio Code"
 3. Click the TERMINAL or "Ctrl + `" to enter the terminal
 4. Run the python server by run below code:
