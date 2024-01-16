@@ -159,7 +159,7 @@
                 _showPage();
             })
 
-            // Demo file upload
+            // Demo csv file upload
             $.ajax({
                 type: "GET",
                 // url: "https://github.com/spkim8804/SUTBLE_SA_ver/blob/master/files/ko_young_7701.csv",
@@ -167,7 +167,7 @@
                 dataType: "text",
                 sync: true,
                 success: function(file) {
-                    console.log("csv file uploaded!")
+                    console.log("csv file is uploaded!")
                     read_merged_files(file, "Demo annotation", 0);
                     streaming();
                 },
@@ -282,7 +282,6 @@
                 this.DarkSkin = false;
                 this.Playstatus = true;
                 this.limbs = true;
-                this.capture = false;
             }
 
             var gui = new dat.GUI();
@@ -294,7 +293,6 @@
             gui.add( control, 'Playstatus', true).listen();
             gui.add( control, 'DarkSkin', false).listen();
             gui.add( control, 'limbs', true).listen();
-            gui.add( control, 'capture', false).listen();
             gui.add( control, 'Time' , 0, skeleton_total_frame[0]).listen();
 
             const load_percentage = document.getElementById("load_percentage");
@@ -324,6 +322,28 @@
                 this.style.backgroundColor = '#232222';
             });
             
+            // Demo video file upload
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'files/ko_young_7701.mp4', true);
+            xhr.responseType = 'blob';
+
+            xhr.onload = function () {
+                if (this.status === 200) {
+                    var videoBlob = this.response;
+                    var vid = URL.createObjectURL(videoBlob); // IE10+
+                    // Video is now downloaded and can be played
+                    var videoPlayer = document.getElementById('video_player');
+                    videoPlayer.src = vid;
+                    console.log("video file is uploaded!");
+                }
+            };
+
+            xhr.onerror = function () {
+            console.error("Error while fetching video");
+            };
+            xhr.send();
+            ///////////////////////////////////////////////
+
             function video_load(file){
                 if(file['type']=='video/mp4'){
                     const videourl = URL.createObjectURL(file);
@@ -551,7 +571,7 @@
                         } else{
                             refresh_annotation_select();
                             set_annot_categories(annot_status2[current_file_num][current_annot_num].length);
-                            gui.__controllers[7].remove();
+                            gui.__controllers[6].remove();
                             gui.add(control, 'Time' , 0, skeleton_total_frame[current_file_num]).listen();
                             if(plot_enable == 1) refresh_plot();
                         }
