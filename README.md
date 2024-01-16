@@ -9,7 +9,7 @@ Installation
 4. Run the python server by run below code:
    `````
    python -m http.server
-5. 
+5. Open Chrome (or other browser) and type `http://localhost:8000/index.html` to run the homepage
 
 # Demo manual
 ![Demo manual](https://github.com/spkim8804/SUTBLE_SA_ver/blob/master/files/photo/demo_manual.png)
