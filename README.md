@@ -3,6 +3,9 @@ This is "SUBTLE visualization homepage" for the stand-alone version.
  
 It is necessary to use "python server" to open project.
 
+# Before start
+1. You should install "Python" and "Visual Studio Code"
+
 # Installation
 1. Download the github files or simply type the following code in your desired location.
    `````
