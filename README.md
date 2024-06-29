@@ -13,7 +13,7 @@ It is necessary to use "python server" to open project.
 2. Open "index.html" file using "Visual Studio Code".
 3. Go to extension (Ctrl + Shift + X) and install "python"
 4. Click the "TERMINAL" in the bottom panel or "Ctrl + `" to enter the terminal.
-5. Run the python server by run below code.
+5. Run the python server by run below code (Make sure your directory is in "SUBTLE_SA_ver" folder).
    `````
    python -m http.server
 6. Open Chrome (or other browser) and type `http://localhost:8000/index.html` to run the homepage.
