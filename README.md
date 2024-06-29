@@ -4,9 +4,9 @@ This is "SUBTLE visualization homepage" for the stand-alone version.
 It is necessary to use "python server" to open project.
 
 # Installation
-1. Download the github files or simple type following code in your desired location.
+1. Download the github files or simply type the following code in your desired location.
    `````
-   git clone https://github.com/spkim8804/SUTBLE_SA_ver.git
+   git clone https://github.com/spkim8804/SUTBLE_SA_ver.githttps://github.com/spkim8804/SUTBLE_SA_ver/blob/master/README.md
 2. Open "index.html" file using "Visual Studio Code".
 3. Click the "TERMINAL" in the bottom panel or "Ctrl + `" to enter the terminal.
 4. Run the python server by run below code.
