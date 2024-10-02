@@ -147,9 +147,9 @@
             import { OrbitControls } from 'orbitcontrol';
             
             function create2DArray(rows, columns) {
-                var arr = new Array(rows);
+                var arr = new Array(parseInt(rows));
                 for (var i = 0; i < rows; i++) {
-                    arr[i] = new Array(columns);
+                    arr[i] = new Array(parseInt(columns));
                 }
                 return arr;
             }
@@ -376,7 +376,7 @@
             // Choose directory (local)
             const choose_directory = document.getElementById('choose_directory');
             choose_directory.addEventListener('change', async function(e){
-                
+                console.log("Try to upload files..");
                 if(e.target.files.length > 0){
                     _loadPage();
                     control.Playstatus = false;
@@ -385,7 +385,9 @@
                     var temp = [];
                     var name = [];
                     current_file_name = [];
+                    video_cnt = 0;
                     for(var i = 0; i < file.length; i++){
+                        console.log("file extension is " + file[i].name.split(".")[file[i].name.split(".").length-1]);
                         if(file[i].name.split(".")[file[i].name.split(".").length-1] == "csv"){
                             const fileContent = await readFile(file[i]);
                             const temp_name = e.target.files[i].name;
@@ -398,9 +400,11 @@
                             video_names[video_cnt] = file[i].name.split(".")[0];
                             videoinfo(file[i], video_cnt);
                             video_cnt += 1;
+                            console.log(video_cnt);
                         }
                     }
                     read_merged_files(temp, name, 1);
+                    end_of_video();
                     // console.log(video_fps);
                     // _showPage();
                 }
@@ -413,6 +417,7 @@
             function load_merged_file(temp, n, column){
                 var array = create2DArray((temp.length-1)/column + 1, column);
                 var k = 0;
+                control.Time = 0;
                 
                 // Get total frames
                 skeleton_total_frame[n] = 0;
@@ -538,7 +543,6 @@
                             if(temp2[0]=='avatar_subtle'){                          
                                 load_percentage.innerHTML = "Loading<br>0 %";
                                 load_percentage.style = "position: absolute; left: "+window.innerWidth*46/100+"px; top: "+window.innerHeight*45/100+"px; display: block"; 
-                                
                                 load_merged_file(input.split(/,|\n/), cnt_temp, temp2.length);
                                 // Loaded files
                                 if(filter == 1){
@@ -574,6 +578,7 @@
                             gui.__controllers[6].remove();
                             gui.add(control, 'Time' , 0, skeleton_total_frame[current_file_num]).listen();
                             if(plot_enable == 1) refresh_plot();
+                            console.log(cnt_temp + " csv files are loaded")
                         }
                     }
                 }
@@ -606,7 +611,7 @@
                     .append("circle")
                     .attr("cx", (d) => xScale(d.x))
                     .attr("cy", (d) => yScale(d.y))
-                    .attr("r", 0.5)
+                    .attr("r", 2)
                     .style("fill", (d) => plot_colors[d.color])
                     // .style("opacity", 0.3);
                 
@@ -1013,7 +1018,7 @@
 
                 current_file_num = parseInt(current_file_num) + 1;
                 if(current_file_num >= total_csv_file) current_file_num -= 1;
-                // console.log(current_file_num);
+                console.log(current_file_num);
                 const new_filenames = document.getElementById('filenames');
                 new_filenames.value = current_file_num;
                 for (var i = 0; i < video_cnt; i++){
@@ -1021,6 +1026,7 @@
                         video.setAttribute("src", video_files[i]);
                         video.load();
                         current_fps = video_fps[i];
+                        video.currentTime = 0;
                         break;
                     }
                 }
@@ -1030,7 +1036,7 @@
                 // Visualize filtered frames only
                 while(true){
                     var temp = false;
-                    if(parseInt(control.Time)<0) parseInt(control.Time) = 0;
+                    if(parseInt(control.Time)<0) control.Time = 0;
                     if(control.Time>=skeleton_total_frame[current_file_num]) end_of_video();
                     for(var i = 0; i < annot_status2[current_file_num][current_annot_num].length; i+=1){
                         if(annot_status[current_file_num][current_annot_num][annot_status2[current_file_num][current_annot_num][i]]==true && 
@@ -1113,7 +1119,8 @@
                         poseseq(merged_file[current_file_num][parseInt(control.Time)+b],Math.pow(b/control.Trace,2)+0.05);
                     }
                 }
-                video.currentTime = parseInt(control.Time)/current_fps;
+                if(current_fps == undefined){ video.currentTime = parseInt(control.Time)/20;}
+                else{ video.currentTime = parseInt(control.Time)/current_fps;}
                 // annotation_name.innerHTML = merged_file[current_file_num][parseInt(control.Time)][30+current_annot_num];
                 annotation_name.innerHTML = control.Time;
             }
